@@ -10,7 +10,7 @@ echo ============================================================
 echo.
 
 :: 1. Checagem de dependencias: Python 3.10+ no PATH
-echo [1/4] Verificando instalacao do Python 3.10+...
+echo [1/5] Verificando instalacao do Python 3.10+...
 set "PYTHON_CMD="
 
 python --version >nul 2>&1
@@ -47,11 +47,11 @@ if %PY_MAJOR% EQU 3 if %PY_MINOR% LSS 10 (
     pause
     exit /b 1
 )
-echo [OK] Python %PY_VER% detectado.
+echo [OK] Python %PY_VER% detectado (SQLite3 nativo disponivel).
 echo.
 
 :: 2. Criacao e ativacao do ambiente virtual (venv)
-echo [2/4] Verificando ambiente virtual (venv)...
+echo [2/5] Verificando ambiente virtual (venv)...
 if not exist "venv\Scripts\activate.bat" (
     echo Criando ambiente virtual isolado...
     %PYTHON_CMD% -m venv venv
@@ -66,7 +66,7 @@ echo [OK] Ambiente virtual ativado.
 echo.
 
 :: 3. Instalacao automatizada das bibliotecas do requirements.txt
-echo [3/4] Instalando/atualizando dependencias do requirements.txt...
+echo [3/5] Instalando/atualizando dependencias do requirements.txt...
 if not exist "requirements.txt" (
     echo [ERRO] Arquivo requirements.txt nao encontrado na raiz do projeto.
     pause
@@ -82,8 +82,37 @@ if %errorlevel% neq 0 (
 echo [OK] Dependencias instaladas com sucesso.
 echo.
 
-:: 4. Inicializacao do servico e abertura automatica no navegador
-echo [4/4] Iniciando a aplicacao Streamlit...
+:: 4. Verificacao do config.txt e estrutura de pastas (certificados, historico e dados)
+echo [4/5] Verificando config.txt e estrutura de diretorios...
+set "PASTA_CERTIFICADOS=certificados"
+set "PASTA_DADOS=dados"
+
+if not exist "config.txt" (
+    echo Criando arquivo padrao config.txt...
+    (
+        echo # Configuracao de diretorios do Gerador de Certificados CMM - Schulz
+        echo # Use caminhos relativos ^(ex: certificados^) ou absolutos ^(ex: C:\Schulz\Certificados^)
+        echo PASTA_CERTIFICADOS=certificados
+        echo PASTA_DADOS=dados
+    ) > "config.txt"
+)
+
+for /f "usebackq eol=# tokens=1,* delims==" %%a in ("config.txt") do (
+    if /i "%%a"=="PASTA_CERTIFICADOS" if not "%%b"=="" set "PASTA_CERTIFICADOS=%%b"
+    if /i "%%a"=="PASTA_DADOS" if not "%%b"=="" set "PASTA_DADOS=%%b"
+)
+
+if not exist "%PASTA_CERTIFICADOS%" mkdir "%PASTA_CERTIFICADOS%"
+if not exist "%PASTA_CERTIFICADOS%\historico" mkdir "%PASTA_CERTIFICADOS%\historico"
+if not exist "%PASTA_DADOS%" mkdir "%PASTA_DADOS%"
+
+echo [OK] Pasta de certificados : %PASTA_CERTIFICADOS%
+echo [OK] Historico de revisoes : %PASTA_CERTIFICADOS%\historico
+echo [OK] Pasta de dados (DB/Excel): %PASTA_DADOS%
+echo.
+
+:: 5. Inicializacao do servico e abertura automatica no navegador
+echo [5/5] Iniciando a aplicacao Streamlit...
 if not exist "app.py" (
     echo [ERRO] Arquivo app.py nao encontrado na raiz do projeto.
     pause

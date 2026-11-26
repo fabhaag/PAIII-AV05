@@ -1,0 +1,4 @@
+# Configuração de diretórios do Gerador de Certificados CMM - Schulz
+# Use caminhos relativos (ex: certificados) ou absolutos (ex: C:\Schulz\Certificados)
+PASTA_CERTIFICADOS=certificados
+PASTA_DADOS=dados
